@@ -44,6 +44,7 @@ object SparkHiveExample {
     val spark = SparkSession
       .builder()
       .appName("Spark Hive Example")
+      .master("local")
       .config("spark.sql.warehouse.dir", warehouseLocation)
       .enableHiveSupport()
       .getOrCreate()
@@ -52,7 +53,7 @@ object SparkHiveExample {
     import spark.sql
 
     sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
-    sql("LOAD DATA LOCAL INPATH 'examples/src/main/resources/kv1.txt' INTO TABLE src")
+    sql("LOAD DATA LOCAL INPATH 'src/main/resources/kv1.txt' INTO TABLE src")
 
     // Queries are expressed in HiveQL
     sql("SELECT * FROM src").show()
@@ -104,7 +105,7 @@ object SparkHiveExample {
 
     // Create a Hive managed Parquet table, with HQL syntax instead of the Spark SQL native syntax
     // `USING hive`
-    sql("CREATE TABLE hive_records(key int, value string) STORED AS PARQUET")
+    sql("CREATE TABLE IF NOT EXISTS hive_records(key int, value string) STORED AS PARQUET")
     // Save DataFrame to the Hive managed table
     val df = spark.table("src")
     df.write.mode(SaveMode.Overwrite).saveAsTable("hive_records")
@@ -120,7 +121,7 @@ object SparkHiveExample {
 
     // Prepare a Parquet data directory
     val dataDir = "/tmp/parquet_data"
-    spark.range(10).write.parquet(dataDir)
+    spark.range(10).write.mode(SaveMode.Overwrite).parquet(dataDir)
     // Create a Hive external Parquet table
     sql(s"CREATE EXTERNAL TABLE hive_bigints(id bigint) STORED AS PARQUET LOCATION '$dataDir'")
     // The Hive external table should already have data

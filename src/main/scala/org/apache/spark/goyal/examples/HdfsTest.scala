@@ -34,6 +34,7 @@ object HdfsTest {
     val spark = SparkSession
       .builder
       .appName("HdfsTest")
+      .master("local[*]")
       .getOrCreate()
     val file = spark.read.text(args(0)).rdd
     val mapped = file.map(s => s.length).cache()
